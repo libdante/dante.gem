@@ -1,184 +1,84 @@
-# Dante
+dante
+-----
 
-Turn any ruby into a daemon.
+  - [![Quality](http://img.shields.io/codeclimate/github/krainboltgreene/dante.gem.svg?style=flat-square)](https://codeclimate.com/github/krainboltgreene/dante.gem)
+  - [![Coverage](http://img.shields.io/codeclimate/coverage/github/krainboltgreene/dante.gem.svg?style=flat-square)](https://codeclimate.com/github/krainboltgreene/dante.gem)
+  - [![Build](http://img.shields.io/travis-ci/krainboltgreene/dante.gem.svg?style=flat-square)](https://travis-ci.org/krainboltgreene/dante.gem)
+  - [![Dependencies](http://img.shields.io/gemnasium/krainboltgreene/dante.gem.svg?style=flat-square)](https://gemnasium.com/krainboltgreene/dante.gem)
+  - [![Downloads](http://img.shields.io/gem/dtv/dante.svg?style=flat-square)](https://rubygems.org/gems/dante)
+  - [![Tags](http://img.shields.io/github/tag/krainboltgreene/dante.gem.svg?style=flat-square)](http://github.com/krainboltgreene/dante.gem/tags)
+  - [![Releases](http://img.shields.io/github/release/krainboltgreene/dante.gem.svg?style=flat-square)](http://github.com/krainboltgreene/dante.gem/releases)
+  - [![Issues](http://img.shields.io/github/issues/krainboltgreene/dante.gem.svg?style=flat-square)](http://github.com/krainboltgreene/dante.gem/issues)
+  - [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](http://opensource.org/licenses/MIT)
+  - [![Version](http://img.shields.io/gem/v/dante.svg?style=flat-square)](https://rubygems.org/gems/dante)
 
-## Description
 
-Dante is the simplest possible thing that will work to turn arbitrary ruby code into an executable that
-can be started via command line or start/stop a daemon, and will store a pid file for you.
+`dante` is the simplest possible way to turn arbitrary ruby code into a command line executable daemon-able service.
 
-If you need to create a ruby executable and you want standard daemon start/stop with pid files
-and no hassle, this gem will be a great way to get started.
 
-## Installation
+Using
+=====
 
-Add to your Gemfile:
+Some examples.
 
-```ruby
-# Gemfile
 
-gem "dante"
-```
+Installing
+==========
 
-or to your gemspec:
+Add this line to your application's Gemfile:
 
-```ruby
-# mygem.gemspec
+    gem "dante", "~> 1.0"
 
-Gem::Specification.new do |s|
-  s.add_dependency "dante"
-end
-```
+And then execute:
 
-## Usage
+    $ bundle
 
-Dante is meant to be used from any "bin" executable. For instance, to create a binary for a web server, create a file in `bin/myapp`:
+Or install it yourself with:
 
-```ruby
-#!/usr/bin/env ruby
+    $ gem install dante
 
-require File.expand_path("../../myapp.rb", __FILE__)
 
-Dante.run('myapp') do |opts|
-  # opts: host, pid_path, port, daemonize, user, group
-  Thin::Server.start('0.0.0.0', opts[:port]) do
-    use Rack::CommonLogger
-    use Rack::ShowExceptions
-    run MyApp
-  end
-end
-```
+Contributing
+============
 
-Be sure to properly make your bin executable:
+  1. Fork it
+  2. Create your feature branch (`git checkout -b my-new-feature`)
+  3. Commit your changes (`git commit -am 'Add some feature'`)
+  4. Push to the branch (`git push origin my-new-feature`)
+  5. Create new Pull Request
 
-```
-chmod +x bin/myapp
-```
 
-### CLI
+Changelog
+=========
 
-This gives your binary several useful things for free:
+  - 1.0.0:
+    * Refactored the build process and dev environment
+  - 0.2.0:
+    * ???
 
-```
-./bin/myapp
-```
 
-will start the app undaemonized in the terminal, handling trapping and stopping the process.
+License
+=======
 
-```
-./bin/myapp -l /var/log/myapp.log
-```
+Copyright (c) 2014 Miso
 
-will start the app undaemonized in the terminal and redirect all stdout and stderr to the specified logfile.
+MIT License
 
-```
-./bin/myapp -p 8080 -d -P /var/run/myapp.pid -l /var/log/myapp.log
-```
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-will daemonize and start the process, storing the pid in the specified pid file.
-All stdout and stderr will be redirected to the specified logfile. If no logfile is specified in daemon mode then all 
-stdout and stderr will be directed to /var/log/<myapp name>.log.
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-```
-./bin/myapp -k -P /var/run/myapp.pid
-```
-
-will stop all daemonized processes for the specified pid file.
-
-```
-./bin/myapp --help
-```
-
-Will return a useful help banner message explaining the simple usage.
-
-### Advanced
-
-In many cases, you will need to add custom flags/options or a custom description to your executable. You can do this
-easily by using `Dante::Runner` more explicitly:
-
-```ruby
-#!/usr/bin/env ruby
-
-require File.expand_path("../../myapp.rb", __FILE__)
-
-# Set default port to 8080
-runner = Dante::Runner.new('myapp', :port => 8080)
-# Sets the description in 'help'
-runner.description = "This is myapp"
-# Setup custom 'test' option flag
-runner.with_options do |opts|
-  opts.on("-t", "--test TEST", String, "Test this thing") do |test|
-    options[:test] = test
-  end
-end
-# Create validation hook for options
-runner.verify_options_hook = lambda { |opts|
-  raise Exception.new("Must supply test parameter") if opts[:test].nil?
-}
-# Parse command-line options and execute the process
-runner.execute do |opts|
-  # opts: host, pid_path, port, daemonize, user, group
-  Thin::Server.start('0.0.0.0', opts[:port]) do
-    puts opts[:test] # Referencing my custom option
-    use Rack::CommonLogger
-    use Rack::ShowExceptions
-    run MyApp
-  end
-end
-```
-
-Now you would be able to do:
-
-```
-./bin/myapp -t custom
-```
-
-and the `opts` would contain the `:test` option for use in your script. In addition, help will now contain
-your customized description in the banner.
-
-You can also use dante programmatically to start, stop and restart arbitrary code:
-
-```ruby
-# daemon start
-Dante::Runner.new('gitdocs').execute(:daemonize => true, :pid_path => @pid, :log_path => @log_path) { something! }
-# daemon stop
-Dante::Runner.new('gitdocs').execute(:kill => true, :pid_path => @pid)
-# daemon restart
-Dante::Runner.new('gitdocs').execute(:daemonize => true, :restart => true, :pid_path => @pid) { something! }
-```
-
-so you can use dante as part of a more complex CLI executable.
-
-## God
-
-Dante can be used well in conjunction with the excellent God process manager. Simply, use Dante to daemonize a process
-and then you can easily use God to monitor:
-
-```ruby
-# /etc/god/myapp.rb
-
-God.watch do |w|
-  w.name            = "myapp"
-  w.interval        = 30.seconds
-  w.start           = "ruby /path/to/myapp/bin/myapp -d"
-  w.stop            = "ruby /path/to/myapp/bin/myapp -k"
-  w.start_grace     = 15.seconds
-  w.restart_grace   = 15.seconds
-  w.pid_file        = "/var/run/myapp.pid"
-
-  w.behavior(:clean_pid_file)
-
-  w.start_if do |start|
-    start.condition(:process_running) do |c|
-      c.interval = 5.seconds
-      c.running = false
-    end
-  end
-end
-```
-
-and that's all. Of course now you can also easily daemonize as well as start/stop the process on the command line as well.
-
-## Copyright
-
-Copyright © 2011 Nathan Esquenazi. See [LICENSE](https://github.com/bazaarlabs/dante/blob/master/LICENSE) for details.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
