@@ -1,15 +1,10 @@
-require 'bundler/gem_tasks'
-require 'rake/testtask'
-# require 'yard'
+#!/usr/bin/env rake
 
-task :test do
-  Rake::TestTask.new do |t|
-    t.libs.push "lib"
-    t.test_files = FileList[File.expand_path('../test/**/*_test.rb', __FILE__)]
-    t.verbose = true
-  end
-end
+require "bundler/gem_tasks"
+require "rspec/core/rake_task"
 
-# task :doc do
-#  YARD::CLI::Yardoc.new.run
-# end
+desc "Run all the tests in spec"
+RSpec::Core::RakeTask.new(:spec)
+
+desc "Default: run tests"
+task default: :spec

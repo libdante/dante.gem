@@ -1,5 +1,9 @@
-require "dante/version"
-require "dante/runner"
+require "fileutils"
+require "optparse"
+require "yaml"
+require "erb"
+require "etc"
+
 
 =begin
 
@@ -14,6 +18,8 @@ require "dante/runner"
 =end
 
 module Dante
+  require_relative "dante/version"
+  require_relative "dante/runner"
 
   # Forks a process and handles option parsing and start/stopping.
   #

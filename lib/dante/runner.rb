@@ -1,9 +1,3 @@
-require 'fileutils'
-require 'optparse'
-require 'yaml'
-require 'erb'
-require 'etc'
-
 =begin
 
 This is a utility for setting up a binary executable for a service.
@@ -107,7 +101,7 @@ module Dante
       log "Starting #{@name} service..."
 
       if log_path = options[:log_path] && options[:daemonize].nil?
-         redirect_output! 
+         redirect_output!
       end
 
       trap("INT") {
@@ -127,7 +121,7 @@ module Dante
     def stop(kill_arg=nil)
       if self.daemon_running?
         kill_pid(kill_arg || options[:kill])
-        
+
         if until_true(MAX_START_TRIES) { self.daemon_stopped? }
           FileUtils.rm options[:pid_path] # Only kill if we stopped the daemon
           log "Daemonized process killed after term."
@@ -224,7 +218,7 @@ module Dante
           puts "#{opts}\n"
           exit
         end
-        
+
         # Load options specified through 'with_options'
         instance_exec(opts, &@with_options) if @with_options
       end.parse!
